@@ -22,5 +22,5 @@ void main() {
     }
     if (vShouldShow < 0.5) discard;
 
-    gl_FragColor = vec4(color * 50., tex.a * alpha);
+    gl_FragColor = vec4(color * 100., tex.a * alpha);
 }

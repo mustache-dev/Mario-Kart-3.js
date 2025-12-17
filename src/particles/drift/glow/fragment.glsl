@@ -15,7 +15,7 @@ void main() {
   vec2 diff = uv - center;
   float radius = length(diff);
   float innerThreshold = 0.1;
-  float outerThreshold = 0.4; 
+  float outerThreshold = 0.3; 
 
   float edgeFactor = smoothstep(innerThreshold, outerThreshold, radius);
   float fade = (color. r > 0.5 && color.g > 0.5) ? 0.01 : 1.0;

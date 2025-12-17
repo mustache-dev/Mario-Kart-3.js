@@ -13,6 +13,7 @@ import { Wheels } from "./Wheels";
 import { damp } from "three/src/math/MathUtils.js";
 import VFXEmitter from "../wawa-vfx/VFXEmitter.tsx";
 import { useGameStore } from "../store.js";
+import Flames from "../particles/drift/flames/Flames.jsx";
 
 const animationsNames = ["IDLE-KART", "TURN-LEFT", "TURN-RIGHT", "wind"];
 export function Model({ speed, inputTurn, driftDirection, driftPower, backWheelOffset, jumpOffset }) {
@@ -101,7 +102,6 @@ const playAction = (name, loopOnce = false) => {
 
       kartBodyRef.current.rotation.x = -Math.PI + Math.sin(time* 80) * 0.003;
 
-      // Start smoke emitters and update flame positions
 
       if(speed.current < 10) {
         smoke1Ref.current?.startEmitting();
@@ -114,8 +114,8 @@ const playAction = (name, loopOnce = false) => {
 
       if (flamePositionLeftRef.current && flamePositionRightRef.current) {
         setFlamePositions([
-          flamePositionLeftRef.current.getWorldPosition(new Vector3()),
-          flamePositionRightRef.current.getWorldPosition(new Vector3()),
+          flamePositionLeftRef.current.position,
+          flamePositionRightRef.current.position,
         ]);
       }
   });
@@ -156,6 +156,7 @@ const playAction = (name, loopOnce = false) => {
           scale={0.522}
           position-y={0.01}
         >
+          <Flames />
           {/* Flame emitters */}
           <group
             position={[0.5, 0.55, -1.5]}

@@ -9,7 +9,7 @@ export const TrackScene = () => {
       <Track />
 
 
-      <Flames />
+      {/* <Flames /> */}
 
       {/* <Grid position={[0, -1.99, 0]} infiniteGrid/> */}
     </>
