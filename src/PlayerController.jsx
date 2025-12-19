@@ -1,5 +1,4 @@
-import { Kart } from "./models/Kart";
-import { useKeyboardControls, OrbitControls } from "@react-three/drei";
+import { useKeyboardControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import { Vector3, MeshBasicMaterial } from "three";
@@ -15,9 +14,13 @@ import { buildCollider, checkCollision, kartColliderSettings } from "./utils/Kar
 import { MeshBVHHelper } from "three-mesh-bvh";
 import { EVENTS } from "./events";
 
-// Check for debug mode in URL (?debug)
 const isDebugMode = typeof window !== "undefined" && window.location.search.includes("debug");
-if (isDebugMode) console.log("🔧 Debug mode enabled - collision visualization active");
+
+const tempVec3 = new Vector3();
+const tempDirection = new Vector3();
+const tempDesiredDir = new Vector3();
+const tempCameraPos = new Vector3();
+const tempKartPos = new Vector3();
 
 export const PlayerController = () => {
   const rbRef = useRef(null);
@@ -48,11 +51,10 @@ export const PlayerController = () => {
   const speedRef = useRef(0);
   const rotationSpeedRef = useRef(0);
   const smoothedDirectionRef = useRef(new Vector3(0, 0, -1));
-  
-  // Collision stun system
-  const collisionStunTimer = useRef(0); // Remaining stun time
-  const COLLISION_STUN_DURATION = 1.5; // Seconds
-  const COLLISION_BOUNCE_SPEED = -15; // Negative = backwards
+
+  const collisionStunTimer = useRef(0);
+  const COLLISION_STUN_DURATION = 1.5;
+  const COLLISION_BOUNCE_SPEED = -15;
 
   const isTouchScreen = useTouchScreen();
 
@@ -61,24 +63,19 @@ export const PlayerController = () => {
   const setSpeed = useGameStore((state) => state.setSpeed);
   const setGamepad = useGameStore((state) => state.setGamepad);
 
-  // Collision system
   const colliderRef = useRef(null);
   const colliderBuilt = useRef(false);
   const bvhHelperRef = useRef(null);
   const { scene } = useThree();
 
-  // Build collider from scene walls
   useEffect(() => {
     if (colliderBuilt.current) return;
 
-    // Wait a bit for scene to be ready, then build collider
     const buildTimer = setTimeout(() => {
-      // Find wall/barrier meshes in scene (exclude ground meshes)
       const wallMeshes = [];
       scene.traverse((child) => {
         if (child.isMesh) {
           const name = child.name.toLowerCase();
-          // Include walls, barriers, fences - exclude ground
           if (
             name.includes("wall") ||
             name.includes("barrier") ||
@@ -97,9 +94,7 @@ export const PlayerController = () => {
           colliderRef.current = collider;
           scene.add(collider);
           colliderBuilt.current = true;
-          console.log("Kart collision enabled with", wallMeshes.length, "wall meshes");
 
-          // Debug mode: Add BVH helper and make collider visible
           if (isDebugMode) {
             collider.visible = true;
             collider.material = new MeshBasicMaterial({
@@ -109,22 +104,17 @@ export const PlayerController = () => {
               opacity: 0.3,
             });
 
-            // Add BVH helper to visualize the bounding volume hierarchy
             const bvhHelper = new MeshBVHHelper(collider, 10);
             bvhHelper.color.set(0x00ff00);
             scene.add(bvhHelper);
             bvhHelperRef.current = bvhHelper;
-            console.log("Debug: BVH helper added");
           }
         }
-      } else {
-        console.log("No wall meshes found for collision. Name meshes with 'wall', 'barrier', 'fence', 'border', or 'collision'");
       }
     }, 1000);
 
     return () => {
       clearTimeout(buildTimer);
-      // Cleanup BVH helper on unmount
       if (bvhHelperRef.current) {
         scene.remove(bvhHelperRef.current);
         bvhHelperRef.current = null;
@@ -175,10 +165,8 @@ export const PlayerController = () => {
   };
 
   function updateSpeed(forward, backward, delta) {
-    // Tick down stun timer
     if (collisionStunTimer.current > 0) {
       collisionStunTimer.current -= delta;
-      // While stunned, gradually recover speed to 0 but block acceleration
       speedRef.current = damp(speedRef.current, 0, 2, delta);
       setSpeed(speedRef.current);
       setIsBoosting(false);
@@ -253,8 +241,6 @@ export const PlayerController = () => {
 
   function jumpPlayer(spaceKey, left, right, joystickX) {
     if (spaceKey && !jumpIsHeld.current && !isJumping.current) {
-      // rb.applyImpulse({ x: 0, y: 45, z: 0 }, true);
-
       jumpAnim();
       isJumping.current = true;
       jumpIsHeld.current = true;
@@ -285,18 +271,18 @@ export const PlayerController = () => {
   }
 
   function updatePlayer(player, speed, camera, kart, delta) {
-    const desiredDirection = new Vector3(
+    tempDesiredDir.set(
       -Math.sin(player.rotation.y),
       0,
       -Math.cos(player.rotation.y)
     );
 
-    smoothedDirectionRef.current.lerp(desiredDirection, 12 * delta);
-    const dir = smoothedDirectionRef.current;
+    smoothedDirectionRef.current.lerp(tempDesiredDir, 12 * delta);
+    tempDirection.copy(smoothedDirectionRef.current);
 
     const angle = Math.atan2(
-      desiredDirection.x * dir.z - desiredDirection.z * dir.x,
-      desiredDirection.x * dir.x + desiredDirection.z * dir.z
+      tempDesiredDir.x * tempDirection.z - tempDesiredDir.z * tempDirection.x,
+      tempDesiredDir.x * tempDirection.x + tempDesiredDir.z * tempDirection.z
     );
 
     kart.rotation.y = damp(
@@ -306,44 +292,32 @@ export const PlayerController = () => {
       delta
     );
 
-    camera.lookAt(kartRef.current.getWorldPosition(new Vector3()));
-    camera.position.lerp(
-      cameraGroupRef.current.getWorldPosition(new Vector3()),
-      24 * delta
-    );
-    
+    kartRef.current.getWorldPosition(tempKartPos);
+    camera.lookAt(tempKartPos);
+    cameraGroupRef.current.getWorldPosition(tempCameraPos);
+    camera.position.lerp(tempCameraPos, 24 * delta);
 
-    // const body = useGameStore.getState().body;
-    // if(body){
-    //   cameraGroupRef.current.position.y = lerp(cameraGroupRef.current.position.y, body.position.y + 2, 8 * delta);
-    //   cameraLookAtRef.current.position.y = body.position.y;
-    // }
-    const direction = smoothedDirectionRef.current;
+    const desiredX = player.position.x + tempDirection.x * speed * delta;
+    const desiredZ = player.position.z + tempDirection.z * speed * delta;
+    tempVec3.set(desiredX, player.position.y, desiredZ);
 
-    // Calculate desired new position
-    const desiredX = player.position.x + direction.x * speed * delta;
-    const desiredZ = player.position.z + direction.z * speed * delta;
-    const desiredPosition = new Vector3(desiredX, player.position.y, desiredZ);
-
-    // Check collision if collider exists
     if (colliderRef.current) {
       const result = checkCollision(
         player.position,
-        desiredPosition,
+        tempVec3,
         colliderRef.current,
         kartColliderSettings
       );
       player.position.x = result.position.x;
       player.position.z = result.position.z;
 
-      // Bounce back and stun on collision
       if (result.collided && collisionStunTimer.current <= 0) {
         speedRef.current = COLLISION_BOUNCE_SPEED;
         collisionStunTimer.current = COLLISION_STUN_DURATION;
+        turbo.current = 0;
         eventBus.emit(EVENTS.PLAYER.IMPACT, player.position);
       }
     } else {
-      // No collision system - move freely
       player.position.x = desiredX;
       player.position.z = desiredZ;
     }
@@ -351,11 +325,11 @@ export const PlayerController = () => {
     setPlayerPosition(player.position);
   }
 
-  const updatePlayroomState = () =>{
-    if(me()){
-      me().setState("position", playerRef.current.position )
+  const updatePlayroomState = () => {
+    if (me()) {
+      me().setState("position", playerRef.current.position);
     }
-  }
+  };
 
   useFrame((state, delta) => {
     if (!playerRef.current && !rbRef.current) return;
@@ -398,8 +372,6 @@ export const PlayerController = () => {
       <group></group>
       <group ref={playerRef}>
         <group ref={cameraGroupRef} position={[0, 1, 5]}></group>
-
-{/* <OrbitControls/> */}
         <group ref={kartRef}>
           <VFXEmitter
             emitter="confettis"
@@ -435,35 +407,30 @@ export const PlayerController = () => {
               size: [0.5, 1],
             }}
           />
-
-          {/* <Kart
+          <Model
             speed={speedRef}
             driftDirection={driftDirection}
             driftPower={driftPower}
             jumpOffset={jumpOffset}
             backWheelOffset={backWheelOffset}
             inputTurn={inputTurn}
-          /> */}
-          <Model speed={speedRef} driftDirection={driftDirection} driftPower={driftPower} jumpOffset={jumpOffset} backWheelOffset={backWheelOffset} inputTurn={inputTurn} />
-
-          {/* Debug: Show player collision capsule */}
+          />
           {isDebugMode && (
             <mesh position={[0, (kartColliderSettings.radius + kartColliderSettings.height) / 2, 0]}>
-              <capsuleGeometry args={[
-                kartColliderSettings.radius,
-                kartColliderSettings.height - kartColliderSettings.radius * 2,
-                4,
-                16
-              ]} />
+              <capsuleGeometry
+                args={[
+                  kartColliderSettings.radius,
+                  kartColliderSettings.height - kartColliderSettings.radius * 2,
+                  4,
+                  16,
+                ]}
+              />
               <meshBasicMaterial color={0x00ffff} wireframe transparent opacity={0.5} />
             </mesh>
           )}
-
           <group ref={cameraLookAtRef} position={[0, -2, -9]}></group>
         </group>
       </group>
-
-      {/* <OrbitControls/> */}
     </>
   );
 };

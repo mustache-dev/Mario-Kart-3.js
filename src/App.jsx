@@ -1,22 +1,17 @@
 import {
-  Bvh,
-  OrbitControls,
   KeyboardControls,
-  Preload,
   useTexture,
 } from "@react-three/drei";
 import { useEffect } from "react";
 import { TrackScene } from "./TrackScene";
 import { Lighting } from "./misc/Lighting";
-import { VFXParticles, RenderMode, AppearanceMode } from "wawa-vfx";
+import { VFXParticles } from "wawa-vfx";
 import { Composer } from "./Composer";
 import { useThree } from "@react-three/fiber";
-import { Skid } from "./particles/drift/Skid";
 import { Leva } from "leva";
 import { PlayroomStarter } from "./PlayroomStarter";
-import { NormalBlending } from "three";
 import { Impact } from "./particles/Impact";
-
+import { Fresnel } from "./particles/Fresnel/Fresnel";
 export const App = () => {
   const controls = [
     { name: "forward", keys: ["ArrowUp", "KeyW"] },
@@ -27,7 +22,6 @@ export const App = () => {
   ];
 
   const smokeTexture = useTexture("./textures/particles/smoke.png");
-
   const { camera } = useThree();
 
   useEffect(() => {
@@ -38,7 +32,8 @@ export const App = () => {
 
   return (
     <>
-    <PlayroomStarter/>
+      <PlayroomStarter />
+      <Fresnel />
       <VFXParticles
         name="confettis"
         geometry={<boxGeometry args={[0.5, 1, 0.01]} />}
@@ -51,23 +46,8 @@ export const App = () => {
           gravity: [0, 0, 0],
           frustumCulled: false,
         }}
-        // alphaMap={smokeTexture}
       />
-      {/* <VFXParticles
-      name="sparks"
-      settings={{
-        fadeAlpha: [0, 1],
-        fadeSize: [1, 0],
-        intensity: 24,
-        nbParticles: 1000,
-        renderMode: RenderMode.StretchBillboard,
-        appearance: AppearanceMode.Circular,
-        gravity: [0, -3, 0],
-        frustumCulled: false,
-        blendingMode: NormalBlending
-      }}
-      /> */}
-      <Impact/>
+      <Impact />
       <VFXParticles
         name="smoke"
         settings={{
@@ -94,22 +74,12 @@ export const App = () => {
         }}
         alphaMap={smokeTexture}
       />
-      {/* <Skid/> */}
       <KeyboardControls map={controls}>
         <TrackScene />
-
         <Lighting />
       </KeyboardControls>
-
       <Composer />
-      <Leva
-        fill // default = false,  true makes the pane fill the parent dom node it's rendered in
-        flat // default = false,  true removes border radius and shadow
-        oneLineLabels // default = false, alternative layout for labels, with labels and fields on separate rows
-        hideTitleBar // default = false, hides the GUI header
-        collapsed // default = false, when true the GUI is collpased
-        hidden // def
-      />
+      <Leva fill flat oneLineLabels hideTitleBar collapsed hidden />
     </>
   );
 };
