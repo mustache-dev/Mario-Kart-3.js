@@ -1,3 +1,6 @@
+import EventEmitter from "eventemitter3";
+import { TextureLoader } from "three";
+
 export const kartSettings = {
   speed: {
     min: -10,
@@ -50,3 +53,7 @@ export const getDriftLevel = (power) => {
     level: 0,
   };
 };
+
+export const noiseTexture = new TextureLoader().load("./textures/noise.png");
+
+export const eventBus = new EventEmitter()

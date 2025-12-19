@@ -21,7 +21,7 @@ const PlayroomStarterInner = () => {
     initialized.current = true;
 
     const start = async () => {
-      await insertCoin();
+      await insertCoin({skipLobby: true});
 
       onPlayerJoin((state) => {
         if (state.id === me().id) return;

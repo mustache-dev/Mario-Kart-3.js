@@ -1,4 +1,4 @@
-import VFXEmitter from "../wawa-vfx/VFXEmitter";
+import { VFXEmitter } from "wawa-vfx";
 import { forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 
 export const Dust = forwardRef(({ position }, ref) => {

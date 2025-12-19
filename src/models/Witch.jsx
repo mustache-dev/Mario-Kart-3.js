@@ -11,7 +11,7 @@ import { SkeletonUtils } from "three-stdlib";
 import { LoopOnce, LoopRepeat, Vector3 } from "three";
 import { Wheels } from "./Wheels";
 import { damp } from "three/src/math/MathUtils.js";
-import VFXEmitter from "../wawa-vfx/VFXEmitter.tsx";
+import { VFXEmitter } from "wawa-vfx";
 import { useGameStore } from "../store.js";
 import Flames from "../particles/drift/flames/Flames.jsx";
 
@@ -121,6 +121,8 @@ const playAction = (name, loopOnce = false) => {
   });
   return (
     <group ref={group} dispose={null} position={[0, 0, 0]} scale={2}>
+
+
       <group ref={wheelsRef}>
         <Wheels 
           speed={speed} 

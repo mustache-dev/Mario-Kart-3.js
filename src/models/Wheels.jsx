@@ -14,6 +14,7 @@ import { Glow } from "../particles/drift/glow/Glow";
 import { Skate } from "../particles/drift/Skate/Skate";
 import { Trails } from "../particles/sparks/Trails";
 import { KartDust } from "./KartDust";
+import { Spark } from "../particles/drift/Spark";
 import { getDriftLevel } from "../constants";
 import { useGameStore } from "../store";
 
@@ -40,11 +41,14 @@ export function Wheels({ speed, inputTurn, driftDirection, driftPower, jumpOffse
   const glow2Ref = useRef(null);
   const skate1Ref = useRef(null);
   const skate2Ref = useRef(null);
+  const sparkLeftRef = useRef(null);
+  const sparkRightRef = useRef(null);
 
   const leftParticles = useRef(null);
   const rightParticles = useRef(null);
 
   const isDriftingRef = useRef(false);
+  const lastSparkColor = useRef(null);
 
   // Dust states for each wheel
   const dustWheelStates = useRef([
@@ -150,6 +154,7 @@ export function Wheels({ speed, inputTurn, driftDirection, driftPower, jumpOffse
         glow2Ref?.current?.setOpacity(0);
         skate1Ref?.current?.setOpacity(0);
         skate2Ref?.current?.setOpacity(0);
+        lastSparkColor.current = null;
       }
     }
 
@@ -161,6 +166,16 @@ export function Wheels({ speed, inputTurn, driftDirection, driftPower, jumpOffse
       glow2Ref?.current?.setLevel(driftLevel.threshold);
       sparksLeftRef?.current?.setColor(driftLevel.color);
       sparksRightRef?.current?.setColor(driftLevel.color);
+
+      // Emit sparks when color changes (not white)
+      const isWhite = driftLevel.color === 0xffffff || driftLevel.color === "#ffffff";
+      if (!isWhite && lastSparkColor.current !== driftLevel.color) {
+        lastSparkColor.current = driftLevel.color;
+        sparkLeftRef?.current?.setColor(driftLevel.color);
+        sparkRightRef?.current?.setColor(driftLevel.color);
+        sparkLeftRef?.current?.emit();
+        sparkRightRef?.current?.emit();
+      }
     }
 
     setDriftLevel(driftLevel);
@@ -233,12 +248,28 @@ export function Wheels({ speed, inputTurn, driftDirection, driftPower, jumpOffse
       wheel1.current.position.y - 0.1,
       wheel1.current.position.z + 0.1
     );
+
+    // Update spark positions (get world position from particle groups)
+    if (sparkLeftRef.current && leftParticles.current) {
+      const worldPos = new Vector3();
+      leftParticles.current.getWorldPosition(worldPos);
+      sparkLeftRef.current.setWorldPosition(worldPos);
+    }
+    if (sparkRightRef.current && rightParticles.current) {
+      const worldPos = new Vector3();
+      rightParticles.current.getWorldPosition(worldPos);
+      sparkRightRef.current.setWorldPosition(worldPos);
+    }
   });
 
   return (
     <group dispose={null}>
       {/* Wheel dust effects */}
       <KartDust wheelStates={dustWheelStates.current} />
+
+      {/* Spark effects - single instance for each side */}
+      <Spark ref={sparkLeftRef} />
+      <Spark ref={sparkRightRef} />
 
       {/* Back wheels */}
       <mesh

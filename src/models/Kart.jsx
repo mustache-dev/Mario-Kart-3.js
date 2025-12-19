@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { useGLTF, useKeyboardControls, useProgress} from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { damp } from "three/src/math/MathUtils.js";
-import VFXEmitter from "../wawa-vfx/VFXEmitter.tsx";
+import { VFXEmitter } from "wawa-vfx";
 import { getDriftLevel } from "../constants.js";
 import { Glow } from "../particles/drift/glow/Glow.jsx";
 import { useGameStore } from "../store.js";

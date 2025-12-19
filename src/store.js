@@ -23,8 +23,6 @@ export const useGameStore = create((set) => ({
   setJoystick: (joystick) => set({ joystick: joystick }),
   jumpButtonPressed: false,
   setJumpButtonPressed: (pressed) => set({ jumpButtonPressed: pressed }),
-  noiseTexture: null,
-  setNoiseTexture: (noiseTexture) => set({noiseTexture: noiseTexture}),
   gamepad: null,
   setGamepad: (gamepad) => set({gamepad: gamepad}),
   isOnDirt:null,

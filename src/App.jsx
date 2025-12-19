@@ -5,16 +5,17 @@ import {
   Preload,
   useTexture,
 } from "@react-three/drei";
-import { Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import { TrackScene } from "./TrackScene";
 import { Lighting } from "./misc/Lighting";
-import VFXParticles from "./wawa-vfx/VFXParticles";
+import { VFXParticles, RenderMode, AppearanceMode } from "wawa-vfx";
 import { Composer } from "./Composer";
 import { useThree } from "@react-three/fiber";
 import { Skid } from "./particles/drift/Skid";
 import { Leva } from "leva";
-import { useGameStore } from "./store";
 import { PlayroomStarter } from "./PlayroomStarter";
+import { NormalBlending } from "three";
+import { Impact } from "./particles/Impact";
 
 export const App = () => {
   const controls = [
@@ -26,19 +27,14 @@ export const App = () => {
   ];
 
   const smokeTexture = useTexture("./textures/particles/smoke.png");
-  const noiseTexture = useTexture("./textures/noise.png");
 
-  const setNoiseTexture = useGameStore((state) => state.setNoiseTexture);
   const { camera } = useThree();
 
   useEffect(() => {
     if (camera) {
       camera.layers.enable(1);
-      if (noiseTexture) {
-        setNoiseTexture(noiseTexture);
-      }
     }
-  }, [camera, noiseTexture, setNoiseTexture]);
+  }, [camera]);
 
   return (
     <>
@@ -57,7 +53,21 @@ export const App = () => {
         }}
         // alphaMap={smokeTexture}
       />
-
+      {/* <VFXParticles
+      name="sparks"
+      settings={{
+        fadeAlpha: [0, 1],
+        fadeSize: [1, 0],
+        intensity: 24,
+        nbParticles: 1000,
+        renderMode: RenderMode.StretchBillboard,
+        appearance: AppearanceMode.Circular,
+        gravity: [0, -3, 0],
+        frustumCulled: false,
+        blendingMode: NormalBlending
+      }}
+      /> */}
+      <Impact/>
       <VFXParticles
         name="smoke"
         settings={{

@@ -3,19 +3,17 @@ import { forwardRef, useImperativeHandle, useRef, useMemo, useEffect } from "rea
 import { ShaderMaterial, DoubleSide } from "three";
 import fragmentShader from './fragment.glsl';
 import vertexShader from './vertex.glsl';
-import { useGameStore } from "../../../store";
+import { noiseTexture } from "../../../constants";
 
 export const Skate = forwardRef((props, ref) => {
   const elapsedTimeRef = useRef(0);
-
-  const noiseTexture = useGameStore.getState().noiseTexture;
 
   const material = useMemo(() => {
     return new ShaderMaterial({
       uniforms: {
         time: { value: 0 },
         opacity: { value: 0 },
-        noiseTexture: { value: noiseTexture || null }
+        noiseTexture: { value: noiseTexture }
       },
       vertexShader,
       fragmentShader,
@@ -23,7 +21,7 @@ export const Skate = forwardRef((props, ref) => {
       depthWrite: false,
       side: DoubleSide,
     });
-  }, [noiseTexture]);
+  }, []);
 
   useFrame((state) => {
     elapsedTimeRef.current = state.clock.getElapsedTime();

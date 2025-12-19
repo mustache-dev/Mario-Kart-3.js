@@ -4,15 +4,16 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useEffect } from "react";
 import { Vector3, MeshBasicMaterial } from "three";
 import { damp } from "three/src/math/MathUtils.js";
-import { kartSettings } from "./constants";
+import { eventBus, kartSettings } from "./constants";
 import { useGameStore } from "./store";
 import gsap from "gsap";
 import { useTouchScreen } from "./hooks/useTouchScreen";
-import VFXEmitter from "./wawa-vfx/VFXEmitter";
+import { VFXEmitter } from "wawa-vfx";
 import { Model } from "./models/Witch";
 import { me } from "playroomkit";
 import { buildCollider, checkCollision, kartColliderSettings } from "./utils/KartCollision";
 import { MeshBVHHelper } from "three-mesh-bvh";
+import { EVENTS } from "./events";
 
 // Check for debug mode in URL (?debug)
 const isDebugMode = typeof window !== "undefined" && window.location.search.includes("debug");
@@ -339,6 +340,7 @@ export const PlayerController = () => {
       if (result.collided && collisionStunTimer.current <= 0) {
         speedRef.current = COLLISION_BOUNCE_SPEED;
         collisionStunTimer.current = COLLISION_STUN_DURATION;
+        eventBus.emit(EVENTS.PLAYER.IMPACT, player.position);
       }
     } else {
       // No collision system - move freely
@@ -380,7 +382,6 @@ export const PlayerController = () => {
         gamepadRef.current.buttons[7].pressed;
       gamepadButtons.x = gamepadRef.current.axes[0];
     }
-    const time = state.clock.getElapsedTime();
 
     updateSpeed(forward, backward, delta);
     rotatePlayer(left, right, player, joystick.x, delta);
@@ -402,10 +403,11 @@ export const PlayerController = () => {
         <group ref={kartRef}>
           <VFXEmitter
             emitter="confettis"
+            autoStart={true}
             settings={{
               duration: 0.5,
               delay: 0.1,
-              nbParticles: 1000,
+              nbParticles: 100,
               spawnMode: "time",
               loop: true,
               startPositionMin: [-100, 0, -100],

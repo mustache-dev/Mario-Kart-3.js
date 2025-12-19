@@ -6,15 +6,12 @@ import {
   PlaneGeometry,
   Vector3,
   Color,
-  Quaternion,
-  Euler,
-  BackSide,
-  DoubleSide,
 } from "three";
 import { memo } from "react";
 import fragmentShader from "./fragment.glsl";
 import vertexShader from "./vertex.glsl";
 import { useGameStore } from "../../../store";
+import { noiseTexture } from "../../../constants";
 
 extend({ InstancedMesh2 });
 
@@ -60,7 +57,6 @@ export const Flames = () => {
 
   useFrame((state, delta) => {
     if (!ref.current) return;
-    const camera = state.camera;
     const flamePositions = useGameStore.getState().flamePositions;
     const isBoosting = useGameStore.getState().isBoosting;
     if (
@@ -68,7 +64,6 @@ export const Flames = () => {
       state.clock.getElapsedTime() - lastFiredTimeRef.current >= addInterval &&
       isBoosting
     ) {
-      const noiseTexture = useGameStore.getState().noiseTexture;
       material.uniforms.noiseTexture.value = noiseTexture;
       const [left, right] = flamePositions;
       ref.current.addInstances(1, (obj) => {
@@ -103,7 +98,6 @@ export const Flames = () => {
     }
 
     const GRAVITY = 3.;
-    const q = ref.current.parent.getWorldQuaternion(new Quaternion())
     ref.current.updateInstances((obj) => {
       obj.currentTime += delta * 0.4 
       obj.setUniform("uCurrentTime", obj.currentTime);
@@ -126,6 +120,7 @@ export const Flames = () => {
   return (
     <instancedMesh2
       ref={ref}
+      castShadow={false}
       args={[geometry, material, { createEntities: true }]}
       frustumCulled={false}
     />

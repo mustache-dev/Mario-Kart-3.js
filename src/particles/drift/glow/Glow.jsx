@@ -2,16 +2,13 @@ import { Billboard } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { forwardRef, useImperativeHandle, useRef, useMemo } from "react";
 import { AdditiveBlending, Color, ShaderMaterial } from "three";
-import { Spark } from "../Spark";
 import fragmentShader from './fragment.glsl';
 import vertexShader from './vertex.glsl';
-import { useGameStore } from "../../../store";
+import { noiseTexture } from "../../../constants";
 
 
 export const Glow = forwardRef(({ driftDirection }, ref) => {
   const materialRef = useRef(null);
-  const sparkRef = useRef(null);
-  let noiseTexture = null;
   
   const material = useMemo(() => new ShaderMaterial({
     uniforms: {
@@ -21,7 +18,7 @@ export const Glow = forwardRef(({ driftDirection }, ref) => {
       opacity: { value: 1 },
       timeOffset: { value: Math.random() * 3},
       xDisplacement: { value: 0 },
-      noiseTexture: { value : null}
+      noiseTexture: { value: noiseTexture }
     },
     vertexShader: vertexShader,
     fragmentShader: fragmentShader,
@@ -34,16 +31,8 @@ export const Glow = forwardRef(({ driftDirection }, ref) => {
   useFrame((state) => {
     if (material) {
       material.uniforms.time.value = state.clock.getElapsedTime() * 2;
-    
       material.uniforms.xDisplacement.value = -(driftDirection.current) * 0.1;
-      if(noiseTexture === null){
-        noiseTexture = useGameStore.getState().noiseTexture;
-        material.uniforms.noiseTexture.value = noiseTexture;
-        console.log(noiseTexture);
-        
-      }
     }
-    
   });
 
   useImperativeHandle(ref, () => {
@@ -56,12 +45,6 @@ export const Glow = forwardRef(({ driftDirection }, ref) => {
         if (!newCol.equals(prevColor)) {
           prevColor.copy(newCol);
           material.uniforms.color.value.copy(newCol);
-  
-          const isWhite = newCol.r === 1 && newCol.g === 1 && newCol.b === 1;
-          if (!isWhite) {
-            sparkRef.current?.setColor(newCol);
-            sparkRef.current?.emit();
-          }
         }
       },
       setLevel: (level) => {
@@ -77,11 +60,10 @@ export const Glow = forwardRef(({ driftDirection }, ref) => {
   const size = 0.07;
 
   return (
-    <Billboard >
+    <Billboard>
       <mesh material={material}>
         <circleGeometry args={[size, 22]} />
       </mesh>
-      <Spark ref={sparkRef}/>
     </Billboard>
   );
 });

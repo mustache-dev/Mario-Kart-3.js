@@ -2,6 +2,7 @@ import { Effect } from "postprocessing";
 import { Uniform, Vector2, Vector3, Euler, Quaternion, Color} from "three";
 import { forwardRef, useEffect, useRef} from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { noiseTexture } from "./constants";
 import { useGameStore } from "./store";
 import { damp } from "three/src/math/MathUtils.js";
 import { useControls } from "leva";
@@ -572,7 +573,7 @@ export const ColorGrading = forwardRef((props, ref) => {
 
   useEffect(() => {
     if (ref) ref.current = effect;
-    effect.setNoiseTexture(useGameStore.getState().noiseTexture);
+    effect.setNoiseTexture(noiseTexture);
     effect.setLensDirtTexture(lensDirtTexture);
   }, [effect, camera, ref, lensDirtTexture]);
 
