@@ -343,6 +343,10 @@ vec3 lensDirt(vec2 uv, float iTime, sampler2D lensDirtTexture, sampler2D noiseTe
   return lensDirtColor;
 }
 
+vec3 acesFilm(vec3 color) {
+  return (color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14);
+}
+
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 fragColor) {
 
   vec2 vUv = uv;
@@ -360,6 +364,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 fragColor) {
   color = splitToning(color, uShadowTint, uHighlightTint, uSplitToneBalance);
   color = applyHslPerRange(color);
   color = toneMapFilmic(color);
+  // color = acesFilm(color);
 
   color.rgb += speedLineEffect(uv, iTime, noiseTexture) * uChromaticAberration * 2.;
 

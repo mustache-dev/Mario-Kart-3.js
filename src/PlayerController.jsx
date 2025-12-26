@@ -13,6 +13,7 @@ import { me } from "playroomkit";
 import { buildCollider, checkCollision, kartColliderSettings } from "./utils/KartCollision";
 import { MeshBVHHelper } from "three-mesh-bvh";
 import { EVENTS } from "./events";
+import { Witch2 } from "./models/Witch-2";
 
 const isDebugMode = typeof window !== "undefined" && window.location.search.includes("debug");
 
@@ -287,7 +288,7 @@ export const PlayerController = () => {
 
     kart.rotation.y = damp(
       kart.rotation.y,
-      angle * 1.3 + driftDirection.current * 0.1,
+      angle * 1.3 - driftDirection.current * 0.05,
       6,
       delta
     );
@@ -407,14 +408,22 @@ export const PlayerController = () => {
               size: [0.5, 1],
             }}
           />
-          <Model
+          {/* <Model
             speed={speedRef}
             driftDirection={driftDirection}
             driftPower={driftPower}
             jumpOffset={jumpOffset}
             backWheelOffset={backWheelOffset}
             inputTurn={inputTurn}
+          /> */}
+          <Witch2            speed={speedRef}
+            driftDirection={driftDirection}
+            driftPower={driftPower}
+            jumpOffset={jumpOffset}
+            backWheelOffset={backWheelOffset}
+            inputTurn={inputTurn}
           />
+
           {isDebugMode && (
             <mesh position={[0, (kartColliderSettings.radius + kartColliderSettings.height) / 2, 0]}>
               <capsuleGeometry
